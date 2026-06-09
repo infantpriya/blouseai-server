@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BlouseAI — AI Blouse Designer for Sarees</title>
+<meta name="description" content="Upload your saree photo and get 4 AI-generated blouse designs instantly. Trusted by tailors and boutiques across Tamil Nadu." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --gold: #B8860B;
+  --gold-light: #F5E6C8;
+  --gold-dark: #7B5A00;
+  --ink: #1A0F00;
+  --cream: #FDFAF4;
+  --cream2: #F7F0E3;
+  --red: #8B1A1A;
+  --green: #0F6E56;
+  --border: rgba(184,134,11,0.2);
+  --shadow: 0 2px 24px rgba(26,15,0,0.08);
+  --r: 12px;
+}
+
+html { scroll-behavior: smooth; }
+body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--cream); color: var(--ink); overflow-x: hidden; }
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(253,250,244,0.92); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 2rem; height: 64px;
+}
+.nav-logo { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; color: var(--gold-dark); letter-spacing: -0.3px; }
+.nav-logo span { color: var(--red); font-style: italic; }
+.nav-links { display: flex; gap: 2rem; align-items: center; }
+.nav-links a { font-size: 13px; font-weight: 500; color: var(--ink); text-decoration: none; opacity: 0.7; transition: opacity 0.15s; }
+.nav-links a:hover { opacity: 1; }
+.nav-cta { background: var(--gold); color: white; border: none; border-radius: 8px; padding: 8px 18px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif; transition: background 0.15s; }
+.nav-cta:hover { background: var(--gold-dark); }
+
+/* ── HERO ── */
+.hero {
+  min-height: 100vh;
+  display: flex; align-items: center;
+  padding: 80px 2rem 4rem;
+  position: relative;
+  overflow: hidden;
+}
+.hero-bg {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 70% 50%, #F5E6C822, transparent),
+              radial-gradient(ellipse 40% 60% at 10% 80%, #8B1A1A0A, transparent);
+}
+.hero-pattern {
+  position: absolute; right: -80px; top: 50%; transform: translateY(-50%);
+  width: 520px; height: 520px; opacity: 0.06;
+  background-image: repeating-linear-gradient(45deg, var(--gold) 0, var(--gold) 1px, transparent 0, transparent 50%);
+  background-size: 20px 20px;
+  border-radius: 50%;
+}
+.hero-content { max-width: 560px; position: relative; z-index: 1; }
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--gold-light); border: 1px solid var(--border);
+  border-radius: 20px; padding: 5px 14px; font-size: 12px; font-weight: 600;
+  color: var(--gold-dark); margin-bottom: 1.5rem;
+  animation: fadeUp 0.6s ease both;
+}
+.badge-dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+@keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+.hero h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(42px, 7vw, 72px);
+  font-weight: 600; line-height: 1.05;
+  color: var(--ink);
+  animation: fadeUp 0.6s 0.1s ease both;
+}
+.hero h1 em { color: var(--red); font-style: italic; }
+.hero h1 span { color: var(--gold-dark); }
+.hero-sub {
+  font-size: 16px; font-weight: 300; color: #5A4A30;
+  line-height: 1.7; margin: 1.25rem 0 2rem;
+  animation: fadeUp 0.6s 0.2s ease both;
+}
+.hero-actions { display: flex; gap: 12px; flex-wrap: wrap; animation: fadeUp 0.6s 0.3s ease both; }
+.btn-primary {
+  background: var(--gold); color: white; border: none;
+  border-radius: 10px; padding: 14px 28px; font-size: 15px; font-weight: 600;
+  cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif;
+  transition: all 0.2s; box-shadow: 0 4px 16px rgba(184,134,11,0.3);
+}
+.btn-primary:hover { background: var(--gold-dark); transform: translateY(-1px); }
+.btn-outline {
+  background: transparent; color: var(--ink);
+  border: 1.5px solid var(--border); border-radius: 10px;
+  padding: 14px 28px; font-size: 15px; font-weight: 500;
+  cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif; transition: all 0.2s;
+}
+.btn-outline:hover { border-color: var(--gold); color: var(--gold-dark); }
+.hero-stats {
+  display: flex; gap: 2rem; margin-top: 2.5rem;
+  animation: fadeUp 0.6s 0.4s ease both;
+}
+.stat-item { text-align: center; }
+.stat-num { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 600; color: var(--gold-dark); }
+.stat-label { font-size: 11px; font-weight: 500; color: #8A7A60; margin-top: 2px; }
+
+/* ── SECTION SHARED ── */
+section { padding: 5rem 2rem; }
+.section-tag { display: inline-block; background: var(--gold-light); color: var(--gold-dark); font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; padding: 4px 12px; border-radius: 20px; margin-bottom: 1rem; }
+.section-title { font-family: 'Cormorant Garamond', serif; font-size: clamp(32px, 5vw, 48px); font-weight: 600; line-height: 1.1; color: var(--ink); margin-bottom: 1rem; }
+.section-sub { font-size: 15px; font-weight: 300; color: #5A4A30; line-height: 1.7; max-width: 520px; }
+.center { text-align: center; margin: 0 auto; }
+
+/* ── HOW IT WORKS ── */
+.how { background: var(--cream2); }
+.steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-top: 3rem; }
+.step-card {
+  background: var(--cream); border: 1px solid var(--border); border-radius: var(--r);
+  padding: 1.75rem 1.5rem; position: relative; transition: box-shadow 0.2s;
+}
+.step-card:hover { box-shadow: var(--shadow); }
+.step-num-badge {
+  width: 36px; height: 36px; border-radius: 50%; background: var(--gold);
+  color: white; display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; margin-bottom: 1rem;
+}
+.step-card h3 { font-size: 15px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+.step-card p { font-size: 13px; color: #5A4A30; line-height: 1.6; }
+.step-icon { font-size: 28px; margin-bottom: 0.75rem; }
+
+/* ── PRICING ── */
+.pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-top: 3rem; max-width: 900px; margin-left: auto; margin-right: auto; }
+.plan-card {
+  background: var(--cream); border: 1px solid var(--border); border-radius: var(--r);
+  padding: 1.75rem 1.5rem; transition: all 0.2s; cursor: pointer; position: relative;
+}
+.plan-card:hover { box-shadow: var(--shadow); transform: translateY(-2px); }
+.plan-card.popular { border: 2px solid var(--gold); }
+.popular-badge {
+  position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+  background: var(--gold); color: white; font-size: 11px; font-weight: 700;
+  padding: 3px 14px; border-radius: 20px; white-space: nowrap;
+}
+.plan-name { font-size: 13px; font-weight: 600; color: var(--gold-dark); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem; }
+.plan-price { font-family: 'Cormorant Garamond', serif; font-size: 42px; font-weight: 600; color: var(--ink); line-height: 1; }
+.plan-price sup { font-size: 18px; vertical-align: super; font-family: 'Plus Jakarta Sans', sans-serif; }
+.plan-period { font-size: 12px; color: #8A7A60; margin-bottom: 1.25rem; }
+.plan-credits { font-size: 14px; font-weight: 600; color: var(--red); margin-bottom: 1rem; }
+.plan-features { list-style: none; margin-bottom: 1.5rem; }
+.plan-features li { font-size: 13px; color: #5A4A30; padding: 5px 0; display: flex; gap: 8px; }
+.plan-features li::before { content: '✓'; color: var(--green); font-weight: 700; }
+.plan-btn {
+  width: 100%; padding: 11px; border-radius: 8px; font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px; font-weight: 600; cursor: pointer; border: 1.5px solid var(--gold);
+  background: transparent; color: var(--gold-dark); transition: all 0.15s;
+}
+.plan-btn:hover, .plan-card.popular .plan-btn { background: var(--gold); color: white; border-color: var(--gold); }
+
+/* ── APP SECTION ── */
+.app-section { background: var(--ink); color: white; }
+.app-section .section-title { color: white; }
+.app-section .section-sub { color: rgba(255,255,255,0.6); }
+.app-section .section-tag { background: rgba(184,134,11,0.2); color: #F5E6C8; }
+
+.app-container {
+  max-width: 760px; margin: 3rem auto 0;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px; overflow: hidden;
+}
+.app-header {
+  background: rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between;
+}
+.app-header-title { font-family: 'Cormorant Garamond', serif; font-size: 18px; color: white; }
+.credits-pill {
+  background: rgba(184,134,11,0.2); border: 1px solid rgba(184,134,11,0.4);
+  border-radius: 20px; padding: 4px 14px; font-size: 12px; font-weight: 600; color: #F5E6C8;
+  display: flex; align-items: center; gap: 6px;
+}
+.credits-count { font-size: 16px; font-weight: 700; color: #F5E6C8; }
+.app-body { padding: 1.5rem; }
+
+/* Upload zone */
+.upload-zone {
+  border: 1.5px dashed rgba(184,134,11,0.4); border-radius: 12px; padding: 2.5rem 1.5rem;
+  text-align: center; cursor: pointer; transition: all 0.2s;
+  background: rgba(255,255,255,0.02); margin-bottom: 1.25rem; position: relative;
+}
+.upload-zone:hover { border-color: var(--gold); background: rgba(184,134,11,0.05); }
+.upload-zone.dragging { border-color: var(--gold); background: rgba(184,134,11,0.1); }
+.upload-icon { font-size: 40px; margin-bottom: 0.75rem; }
+.upload-zone h3 { font-size: 15px; font-weight: 600; color: white; margin-bottom: 4px; }
+.upload-zone p { font-size: 12px; color: rgba(255,255,255,0.4); }
+#fileInput { display: none; }
+
+.preview-area { display: none; margin-bottom: 1.25rem; position: relative; }
+.preview-area img {
+  width: 100%; max-height: 260px; object-fit: contain;
+  border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.05);
+}
+.remove-btn {
+  position: absolute; top: 8px; right: 8px; width: 28px; height: 28px;
+  border-radius: 50%; border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(26,15,0,0.6); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; color: rgba(255,255,255,0.7); transition: all 0.15s;
+}
+.remove-btn:hover { background: rgba(139,26,26,0.6); color: white; }
+
+/* Style chips */
+.chip-label { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.4); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 8px; }
+.chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1rem; }
+.chip {
+  font-size: 12px; padding: 5px 12px; border-radius: 20px; font-family: 'Plus Jakarta Sans', sans-serif;
+  border: 1px solid rgba(255,255,255,0.15); background: transparent; color: rgba(255,255,255,0.6);
+  cursor: pointer; transition: all 0.15s;
+}
+.chip:hover { border-color: var(--gold); color: #F5E6C8; }
+.chip.active { background: var(--gold); color: white; border-color: var(--gold); }
+
+/* Generate button */
+.gen-btn {
+  width: 100%; padding: 14px; background: var(--gold); color: white; border: none;
+  border-radius: 10px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px;
+  font-weight: 600; cursor: pointer; transition: all 0.2s; margin-top: 0.5rem;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.gen-btn:hover:not(:disabled) { background: var(--gold-dark); }
+.gen-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Loading */
+.loading-area { display: none; padding: 1rem 0; }
+.loading-step {
+  display: flex; align-items: center; gap: 10px; padding: 8px 12px;
+  border-radius: 8px; font-size: 13px; color: rgba(255,255,255,0.4); margin-bottom: 4px;
+  transition: all 0.3s;
+}
+.loading-step.active { background: rgba(184,134,11,0.15); color: #F5E6C8; }
+.loading-step.done { color: #5DCAA5; }
+.spin { animation: spin 1s linear infinite; display: inline-block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Results */
+.results-area { display: none; margin-top: 1.25rem; }
+.analysis-card {
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px; padding: 1rem 1.25rem; margin-bottom: 1.25rem;
+}
+.analysis-card h4 { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+.tag-row { display: flex; flex-wrap: wrap; gap: 5px; }
+.atag { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 500; }
+.t-fabric { background: rgba(29,158,117,0.2); color: #5DCAA5; }
+.t-color { background: rgba(127,119,221,0.2); color: #AFA9EC; }
+.t-pattern { background: rgba(216,90,48,0.2); color: #F0997B; }
+.t-occasion { background: rgba(184,134,11,0.2); color: #F5E6C8; }
+
+.designs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.design-card {
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px; overflow: hidden; cursor: pointer; transition: all 0.2s;
+}
+.design-card:hover { border-color: rgba(184,134,11,0.4); }
+.design-card.selected { border: 1.5px solid var(--gold); }
+.design-illustration { height: 150px; background: rgba(255,255,255,0.03); position: relative; overflow: hidden; }
+.design-canvas { width: 100%; height: 100%; }
+.design-info { padding: 10px 12px; }
+.design-name { font-size: 13px; font-weight: 600; color: white; margin-bottom: 3px; }
+.design-desc { font-size: 11px; color: rgba(255,255,255,0.45); line-height: 1.5; }
+.design-tag-row { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+.design-tag { font-size: 10px; padding: 2px 7px; background: rgba(184,134,11,0.2); color: #F5E6C8; border-radius: 10px; font-weight: 500; }
+
+.detail-panel {
+  display: none; margin-top: 1rem; background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 1.25rem;
+}
+.detail-panel h4 { font-family: 'Cormorant Garamond', serif; font-size: 18px; color: white; margin-bottom: 12px; }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1rem; }
+.detail-item { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 8px 10px; }
+.detail-label { font-size: 10px; color: rgba(255,255,255,0.35); margin-bottom: 2px; }
+.detail-val { font-size: 13px; font-weight: 500; color: white; }
+.tailor-list { list-style: none; }
+.tailor-list li { font-size: 12px; color: rgba(255,255,255,0.55); padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; gap: 8px; line-height: 1.5; }
+.tailor-list li:last-child { border-bottom: none; }
+.step-n { min-width: 20px; height: 20px; background: var(--gold); color: white; border-radius: 50%; font-size: 10px; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+
+/* Download & share */
+.action-row { display: flex; gap: 8px; margin-top: 1rem; flex-wrap: wrap; }
+.action-btn {
+  flex: 1; padding: 10px; border-radius: 8px; font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.15s;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.btn-download { background: rgba(29,158,117,0.2); color: #5DCAA5; border: 1px solid rgba(29,158,117,0.3); }
+.btn-download:hover { background: rgba(29,158,117,0.35); }
+.btn-whatsapp { background: rgba(37,211,102,0.15); color: #5DCAA5; border: 1px solid rgba(37,211,102,0.25); }
+.btn-whatsapp:hover { background: rgba(37,211,102,0.25); }
+.btn-share { background: rgba(184,134,11,0.2); color: #F5E6C8; border: 1px solid rgba(184,134,11,0.3); }
+.btn-share:hover { background: rgba(184,134,11,0.35); }
+
+/* Error */
+.error-msg { display: none; background: rgba(139,26,26,0.2); border: 1px solid rgba(139,26,26,0.4); border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #F09595; margin-top: 1rem; }
+
+/* Modal */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; z-index: 200;
+  background: rgba(26,15,0,0.75); backdrop-filter: blur(4px);
+  align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--cream); border-radius: 16px; padding: 2rem;
+  width: min(480px, 92vw); position: relative;
+  animation: fadeUp 0.2s ease;
+}
+.modal h2 { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 600; margin-bottom: 0.5rem; }
+.modal p { font-size: 13px; color: #5A4A30; margin-bottom: 1.5rem; line-height: 1.6; }
+.modal-close { position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 20px; cursor: pointer; color: #8A7A60; }
+.form-group { margin-bottom: 1rem; }
+.form-group label { font-size: 12px; font-weight: 600; color: #5A4A30; display: block; margin-bottom: 5px; }
+.form-group input {
+  width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 8px;
+  font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; background: white; color: var(--ink);
+  transition: border-color 0.15s;
+}
+.form-group input:focus { outline: none; border-color: var(--gold); }
+.modal-plans { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin: 1rem 0; }
+.modal-plan {
+  border: 1.5px solid var(--border); border-radius: 10px; padding: 12px 10px;
+  cursor: pointer; transition: all 0.15s; text-align: center;
+}
+.modal-plan:hover { border-color: var(--gold); }
+.modal-plan.active { border-color: var(--gold); background: var(--gold-light); }
+.mp-credits { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; color: var(--gold-dark); }
+.mp-price { font-size: 13px; font-weight: 600; color: var(--ink); margin-top: 2px; }
+.mp-label { font-size: 10px; color: #8A7A60; }
+.modal-pay-btn {
+  width: 100%; padding: 13px; background: var(--gold); color: white; border: none;
+  border-radius: 10px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px;
+  font-weight: 600; cursor: pointer; margin-top: 0.5rem; transition: background 0.15s;
+}
+.modal-pay-btn:hover { background: var(--gold-dark); }
+
+/* ── TESTIMONIALS ── */
+.testimonials { background: var(--cream2); }
+.testimonial-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem; margin-top: 2.5rem; }
+.testimonial-card {
+  background: var(--cream); border: 1px solid var(--border); border-radius: var(--r);
+  padding: 1.5rem;
+}
+.testimonial-text { font-size: 14px; color: #5A4A30; line-height: 1.7; margin-bottom: 1rem; font-style: italic; }
+.testimonial-author { display: flex; align-items: center; gap: 10px; }
+.author-avatar {
+  width: 36px; height: 36px; border-radius: 50%; background: var(--gold);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: white;
+}
+.author-name { font-size: 13px; font-weight: 600; color: var(--ink); }
+.author-role { font-size: 11px; color: #8A7A60; }
+.stars { color: var(--gold); font-size: 13px; margin-bottom: 0.75rem; }
+
+/* ── FOOTER ── */
+footer {
+  background: var(--ink); color: rgba(255,255,255,0.5); padding: 3rem 2rem;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+}
+.footer-logo { font-family: 'Cormorant Garamond', serif; font-size: 20px; color: white; }
+.footer-logo span { color: var(--gold); font-style: italic; }
+.footer-links { display: flex; gap: 1.5rem; }
+.footer-links a { font-size: 12px; color: rgba(255,255,255,0.4); text-decoration: none; }
+.footer-links a:hover { color: rgba(255,255,255,0.8); }
+footer p { font-size: 12px; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 640px) {
+  nav { padding: 0 1rem; }
+  .nav-links { display: none; }
+  .hero { padding: 80px 1rem 3rem; }
+  section { padding: 3.5rem 1rem; }
+  .designs-grid { grid-template-columns: 1fr; }
+  .modal-plans { grid-template-columns: 1fr; }
+  .detail-grid { grid-template-columns: 1fr; }
+  .hero-stats { gap: 1.25rem; }
+  footer { flex-direction: column; text-align: center; }
+}
+
+/* ── WHATSAPP FLOAT ── */
+.wa-float {
+  position: fixed; bottom: 24px; right: 24px; z-index: 90;
+  width: 52px; height: 52px; border-radius: 50%;
+  background: #25D366; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 16px rgba(37,211,102,0.4); text-decoration: none;
+  font-size: 26px; transition: transform 0.2s;
+  cursor: pointer; border: none;
+}
+.wa-float:hover { transform: scale(1.08); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Blouse<span>AI</span></div>
+  <div class="nav-links">
+    <a href="#how">How it works</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#designer">Try it</a>
+    <a href="#testimonials">Reviews</a>
+  </div>
+  <button class="nav-cta" onclick="openBuyModal()">Buy Credits</button>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-pattern"></div>
+  <div class="hero-content">
+    <div class="hero-badge"><span class="badge-dot"></span> AI-Powered · Tamil Nadu's #1</div>
+    <h1>Upload saree,<br>get <em>perfect</em><br><span>blouse designs</span></h1>
+    <p class="hero-sub">Our AI analyses your saree's fabric, pattern, and colour — then generates 4 matching blouse designs with full tailoring instructions in seconds.</p>
+    <div class="hero-actions">
+      <button class="btn-primary" onclick="document.getElementById('designer').scrollIntoView({behavior:'smooth'})">Try for Free →</button>
+      <button class="btn-outline" onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'})">See how it works</button>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-item"><div class="stat-num">4,200+</div><div class="stat-label">Designs generated</div></div>
+      <div class="stat-item"><div class="stat-num">380+</div><div class="stat-label">Happy tailors</div></div>
+      <div class="stat-item"><div class="stat-num">4.9★</div><div class="stat-label">Average rating</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <div style="max-width:900px;margin:0 auto">
+    <div class="section-tag">How it works</div>
+    <h2 class="section-title">Three steps to the<br>perfect blouse design</h2>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-num-badge">1</div>
+        <div class="step-icon">📸</div>
+        <h3>Upload your saree</h3>
+        <p>Take a photo of any saree — silk, cotton, chiffon, Kanjivaram, Banarasi, or any weave.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num-badge">2</div>
+        <div class="step-icon">🤖</div>
+        <h3>AI analyses it</h3>
+        <p>Our AI reads the fabric, colour palette, pattern, embellishments, and occasion suitability.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num-badge">3</div>
+        <div class="step-icon">✂️</div>
+        <h3>Get 4 designs</h3>
+        <p>Receive 4 unique blouse design cards with necklines, sleeves, back design, and tailoring steps.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num-badge">4</div>
+        <div class="step-icon">📤</div>
+        <h3>Share or download</h3>
+        <p>Send designs to your tailor via WhatsApp or download a PDF with all specifications.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div style="max-width:900px;margin:0 auto;text-align:center">
+    <div class="section-tag center">Pricing</div>
+    <h2 class="section-title center">Simple credit packs</h2>
+    <p class="section-sub center">Each design generation uses 1 credit. Buy once, use anytime. No subscription needed.</p>
+    <div class="pricing-grid">
+      <div class="plan-card" onclick="openBuyModal(5,'starter')">
+        <div class="plan-name">Starter</div>
+        <div class="plan-price"><sup>₹</sup>99</div>
+        <div class="plan-period">one-time</div>
+        <div class="plan-credits">5 design sets</div>
+        <ul class="plan-features">
+          <li>4 blouse designs per set</li>
+          <li>Full tailoring instructions</li>
+          <li>WhatsApp share</li>
+        </ul>
+        <button class="plan-btn">Buy Starter</button>
+      </div>
+      <div class="plan-card popular" onclick="openBuyModal(15,'popular')">
+        <div class="popular-badge">Most Popular</div>
+        <div class="plan-name">Boutique</div>
+        <div class="plan-price"><sup>₹</sup>249</div>
+        <div class="plan-period">one-time</div>
+        <div class="plan-credits">15 design sets</div>
+        <ul class="plan-features">
+          <li>4 blouse designs per set</li>
+          <li>PDF download</li>
+          <li>WhatsApp share</li>
+          <li>Priority support</li>
+        </ul>
+        <button class="plan-btn">Buy Boutique</button>
+      </div>
+      <div class="plan-card" onclick="openBuyModal(50,'pro')">
+        <div class="plan-name">Pro Tailor</div>
+        <div class="plan-price"><sup>₹</sup>599</div>
+        <div class="plan-period">one-time</div>
+        <div class="plan-credits">50 design sets</div>
+        <ul class="plan-features">
+          <li>4 blouse designs per set</li>
+          <li>PDF download</li>
+          <li>WhatsApp share</li>
+          <li>Priority support</li>
+          <li>Shop branding on PDF</li>
+        </ul>
+        <button class="plan-btn">Buy Pro</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DESIGNER APP -->
+<section class="app-section" id="designer">
+  <div style="max-width:760px;margin:0 auto;text-align:center">
+    <div class="section-tag">Try it now</div>
+    <h2 class="section-title">Design your blouse</h2>
+    <p class="section-sub center" style="color:rgba(255,255,255,0.5);margin:0 auto 0">Upload a saree photo below. New users get 1 free credit.</p>
+  </div>
+
+  <div class="app-container">
+    <div class="app-header">
+      <div class="app-header-title">BlouseAI Designer</div>
+      <div class="credits-pill">⚡ <span class="credits-count" id="creditsDisplay">1</span> credit left</div>
+    </div>
+    <div class="app-body">
+
+      <!-- API key is hardcoded server-side, no input needed -->
+
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" id="fileInput" accept="image/*" />
+        <div class="upload-icon">🥻</div>
+        <h3>Upload your saree photo</h3>
+        <p>Drag & drop or click to browse · JPG, PNG, WEBP</p>
+      </div>
+
+      <div class="preview-area" id="previewArea">
+        <img id="previewImg" src="" alt="Uploaded saree" />
+        <button class="remove-btn" id="removeBtn">✕</button>
+      </div>
+
+      <div class="chip-label">Style preference</div>
+      <div class="chip-row" id="styleRow">
+        <button class="chip active" data-val="Traditional">Traditional</button>
+        <button class="chip" data-val="Modern">Modern</button>
+        <button class="chip" data-val="Bridal">Bridal</button>
+        <button class="chip" data-val="Festive">Festive</button>
+        <button class="chip" data-val="Fusion">Fusion</button>
+        <button class="chip" data-val="Casual">Casual</button>
+      </div>
+
+      <div class="chip-label">Neckline</div>
+      <div class="chip-row" id="neckRow">
+        <button class="chip active" data-val="Any">Any</button>
+        <button class="chip" data-val="Round neck">Round</button>
+        <button class="chip" data-val="Boat neck">Boat</button>
+        <button class="chip" data-val="Deep V">Deep V</button>
+        <button class="chip" data-val="Square">Square</button>
+        <button class="chip" data-val="Sweetheart">Sweetheart</button>
+        <button class="chip" data-val="High neck">High neck</button>
+      </div>
+
+      <div class="error-msg" id="errorMsg"></div>
+
+      <button class="gen-btn" id="generateBtn" disabled>
+        ✨ Generate Blouse Designs (1 credit)
+      </button>
+
+      <div class="loading-area" id="loadingArea">
+        <div class="loading-step" id="ls1">🔍 Analysing saree fabric & pattern...</div>
+        <div class="loading-step" id="ls2">🎨 Reading colour palette & weave...</div>
+        <div class="loading-step" id="ls3">✂️ Crafting blouse design concepts...</div>
+        <div class="loading-step" id="ls4">🖼️ Preparing design cards...</div>
+      </div>
+
+      <div class="results-area" id="resultsArea">
+        <div class="analysis-card">
+          <h4>Saree Analysis</h4>
+          <div class="tag-row" id="tagRow"></div>
+        </div>
+        <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Recommended designs — click to view details</div>
+        <div class="designs-grid" id="designsGrid"></div>
+        <div class="detail-panel" id="detailPanel"></div>
+        <div class="action-row" id="actionRow" style="display:none">
+          <button class="action-btn btn-download" onclick="downloadPDF()">⬇ Download PDF</button>
+          <button class="action-btn btn-whatsapp" onclick="shareWhatsApp()">📱 Share on WhatsApp</button>
+          <button class="action-btn btn-share" onclick="copyLink()">🔗 Copy link</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testimonials" id="testimonials">
+  <div style="max-width:900px;margin:0 auto">
+    <div class="section-tag">Reviews</div>
+    <h2 class="section-title">Loved by tailors &<br>boutique owners</h2>
+    <div class="testimonial-grid">
+      <div class="testimonial-card">
+        <div class="stars">★★★★★</div>
+        <p class="testimonial-text">"My customers used to take 30 minutes choosing a blouse design. Now with BlouseAI I show them 4 options in seconds. My shop has doubled consultations per day."</p>
+        <div class="testimonial-author">
+          <div class="author-avatar">MK</div>
+          <div><div class="author-name">Meena Krishnan</div><div class="author-role">Boutique owner, Madurai</div></div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="stars">★★★★★</div>
+        <p class="testimonial-text">"I send the blouse design PDF to my tailor on WhatsApp directly. He knows exactly what to stitch. No more miscommunication. Worth every rupee."</p>
+        <div class="testimonial-author">
+          <div class="author-avatar">PS</div>
+          <div><div class="author-name">Priya Sundar</div><div class="author-role">Customer, Chennai</div></div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="stars">★★★★★</div>
+        <p class="testimonial-text">"I am a tailor in Coimbatore. This AI understands Kanjivaram silk perfectly. The design suggestions match the saree beautifully. My clients are very happy."</p>
+        <div class="testimonial-author">
+          <div class="author-avatar">RV</div>
+          <div><div class="author-name">Rajan Venkat</div><div class="author-role">Master tailor, Coimbatore</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Blouse<span>AI</span></div>
+  <div class="footer-links">
+    <a href="#">Privacy</a>
+    <a href="#">Terms</a>
+    <a href="mailto:support@blouseai.in">Contact</a>
+    <a href="#">WhatsApp Us</a>
+  </div>
+  <p>© 2025 BlouseAI · Made with ❤️ in Tamil Nadu</p>
+</footer>
+
+<!-- WhatsApp Float -->
+<button class="wa-float" onclick="window.open('https://wa.me/91XXXXXXXXXX?text=Hi! I want to try BlouseAI','_blank')" title="Chat on WhatsApp">💬</button>
+
+<!-- BUY MODAL -->
+<div class="modal-overlay" id="buyModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeBuyModal()">✕</button>
+    <h2>Buy Credits</h2>
+    <p>Choose a credit pack to continue generating blouse designs. Credits never expire.</p>
+    <div class="form-group">
+      <label>Your name</label>
+      <input type="text" id="buyName" placeholder="e.g. Meena Krishnan" />
+    </div>
+    <div class="form-group">
+      <label>Mobile number</label>
+      <input type="tel" id="buyPhone" placeholder="9XXXXXXXXX" />
+    </div>
+    <div class="form-group">
+      <label>Email (for receipt)</label>
+      <input type="email" id="buyEmail" placeholder="you@example.com" />
+    </div>
+    <div style="font-size:12px;font-weight:600;color:#5A4A30;margin-bottom:8px;">Select pack</div>
+    <div class="modal-plans">
+      <div class="modal-plan active" data-credits="5" data-amount="9900" data-name="Starter" onclick="selectPlan(this)">
+        <div class="mp-credits">5</div>
+        <div class="mp-price">₹99</div>
+        <div class="mp-label">design sets</div>
+      </div>
+      <div class="modal-plan" data-credits="15" data-amount="24900" data-name="Boutique" onclick="selectPlan(this)">
+        <div class="mp-credits">15</div>
+        <div class="mp-price">₹249</div>
+        <div class="mp-label">design sets</div>
+      </div>
+      <div class="modal-plan" data-credits="50" data-amount="59900" data-name="Pro Tailor" onclick="selectPlan(this)">
+        <div class="mp-credits">50</div>
+        <div class="mp-price">₹599</div>
+        <div class="mp-label">design sets</div>
+      </div>
+    </div>
+    <button class="modal-pay-btn" id="payBtn" onclick="startPayment()">Pay with Razorpay →</button>
+    <p style="font-size:11px;color:#8A7A60;text-align:center;margin-top:0.75rem">🔒 Secure payment · UPI, Cards, Net Banking accepted</p>
+  </div>
+</div>
+
+<script>
+// ── STATE ──
+let credits = parseInt(localStorage.getItem('blouseai_credits') || '1');
+let uploadedFile = null, imageBase64 = null, mediaType = 'image/jpeg';
+let selectedStyle = 'Traditional', selectedNeck = 'Any';
+let allDesigns = [], selectedDesignIdx = null;
+let sareeAnalysis = null;
+
+// ── CREDITS ──
+function updateCreditsDisplay() {
+  document.getElementById('creditsDisplay').textContent = credits;
+}
+updateCreditsDisplay();
+
+// ── UPLOAD ──
+const uploadZone = document.getElementById('uploadZone');
+const fileInput = document.getElementById('fileInput');
+const previewArea = document.getElementById('previewArea');
+const previewImg = document.getElementById('previewImg');
+const removeBtn = document.getElementById('removeBtn');
+const generateBtn = document.getElementById('generateBtn');
+
+uploadZone.addEventListener('click', () => fileInput.click());
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragging'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragging'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault(); uploadZone.classList.remove('dragging');
+  const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith('image/')) loadImage(f);
+});
+fileInput.addEventListener('change', () => { if (fileInput.files[0]) loadImage(fileInput.files[0]); });
+
+removeBtn.addEventListener('click', () => {
+  uploadedFile = null; imageBase64 = null;
+  previewArea.style.display = 'none';
+  uploadZone.style.display = '';
+  fileInput.value = '';
+  document.getElementById('resultsArea').style.display = 'none';
+  document.getElementById('actionRow').style.display = 'none';
+  updateBtn();
+});
+
+function loadImage(file) {
+  uploadedFile = file; mediaType = file.type || 'image/jpeg';
+  const reader = new FileReader();
+  reader.onload = e => {
+    imageBase64 = e.target.result.split(',')[1];
+    previewImg.src = e.target.result;
+    previewArea.style.display = 'block';
+    uploadZone.style.display = 'none';
+    updateBtn();
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── CHIPS ──
+function setupChips(rowId, setter) {
+  document.getElementById(rowId).addEventListener('click', e => {
+    const chip = e.target.closest('.chip');
+    if (!chip) return;
+    document.querySelectorAll('#' + rowId + ' .chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    setter(chip.dataset.val);
+  });
+}
+setupChips('styleRow', v => selectedStyle = v);
+setupChips('neckRow', v => selectedNeck = v);
+
+// ── BACKEND SERVER URL — paste your Vercel URL here after deploying ──
+const SERVER_URL = 'https://YOUR-APP-NAME.vercel.app';
+
+function updateBtn() {
+  generateBtn.disabled = !uploadedFile;
+}
+
+// ── GENERATE ──
+function setLS(n) {
+  for (let i = 1; i <= 4; i++) {
+    const el = document.getElementById('ls' + i);
+    el.classList.remove('active', 'done');
+    if (i < n) el.classList.add('done');
+    else if (i === n) el.classList.add('active');
+  }
+}
+
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = msg; el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 10000);
+}
+
+generateBtn.addEventListener('click', async () => {
+  if (credits <= 0) { openBuyModal(); return; }
+  if (!imageBase64) return;
+
+  generateBtn.disabled = true;
+  document.getElementById('loadingArea').style.display = 'block';
+  document.getElementById('resultsArea').style.display = 'none';
+  document.getElementById('actionRow').style.display = 'none';
+  document.getElementById('errorMsg').style.display = 'none';
+
+  try {
+    setLS(1);
+    // Step 1+2: Send image to our backend → Claude vision analyses it
+    const analysisRes = await fetch(SERVER_URL + '/analyse', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageBase64, mediaType })
+    });
+    if (!analysisRes.ok) { const e = await analysisRes.json(); throw new Error(e.error || 'Server error ' + analysisRes.status); }
+    setLS(2);
+    const analysisData = await analysisRes.json();
+    const info = analysisData.analysis;
+    sareeAnalysis = info;
+    renderAnalysis(info);
+    setLS(3);
+
+    // Step 3+4: Send analysis to backend → Claude generates designs
+    const designRes = await fetch(SERVER_URL + '/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ analysis: info, style: selectedStyle, neckline: selectedNeck })
+    });
+    setLS(4);
+    const designData = await designRes.json();
+    const designs = designData.designs || fallbackDesigns(info);
+    allDesigns = designs;
+    renderDesigns(designs);
+
+    // Deduct credit
+    credits = Math.max(0, credits - 1);
+    localStorage.setItem('blouseai_credits', credits);
+    updateCreditsDisplay();
+
+    document.getElementById('loadingArea').style.display = 'none';
+    document.getElementById('resultsArea').style.display = 'block';
+
+  } catch(err) {
+    document.getElementById('loadingArea').style.display = 'none';
+    showError('Error: ' + err.message);
+  } finally {
+    generateBtn.disabled = false;
+    updateBtn();
+  }
+});
+
+function renderAnalysis(info) {
+  const tagRow = document.getElementById('tagRow');
+  tagRow.innerHTML = '';
+  [
+    { label: info.fabric, cls: 't-fabric' },
+    { label: info.primaryColor, cls: 't-color' },
+    ...(info.secondaryColors||[]).map(c => ({ label: c, cls: 't-color' })),
+    { label: info.pattern, cls: 't-pattern' },
+    { label: info.occasion, cls: 't-occasion' },
+    { label: info.embellishments, cls: 't-pattern' },
+  ].filter(t => t.label && t.label !== 'None').forEach(t => {
+    const s = document.createElement('span');
+    s.className = 'atag ' + t.cls; s.textContent = t.label;
+    tagRow.appendChild(s);
+  });
+}
+
+function drawBlouse(canvas, design) {
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const ac = design.accentColor || '#B8860B';
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = 'rgba(255,255,255,0.03)'; ctx.fillRect(0,0,W,H);
+  const cx = W/2;
+  ctx.strokeStyle = ac; ctx.fillStyle = ac + '33'; ctx.lineWidth = 1.5;
+  const sh = design.svgShape || 'classic';
+  if (sh === 'classic') {
+    ctx.beginPath(); ctx.moveTo(cx-35,22); ctx.lineTo(cx+35,22); ctx.lineTo(cx+46,62); ctx.quadraticCurveTo(cx+50,82,cx+48,105); ctx.lineTo(cx-48,105); ctx.quadraticCurveTo(cx-50,82,cx-46,62); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(cx,22,18,9,0,0,Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx-35,22); ctx.lineTo(cx-56,72); ctx.moveTo(cx+35,22); ctx.lineTo(cx+56,72); ctx.stroke();
+  } else if (sh === 'princess') {
+    ctx.beginPath(); ctx.moveTo(cx-26,14); ctx.quadraticCurveTo(cx,4,cx+26,14); ctx.lineTo(cx+50,65); ctx.quadraticCurveTo(cx+52,86,cx+48,108); ctx.lineTo(cx-48,108); ctx.quadraticCurveTo(cx-52,86,cx-50,65); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx-26,14); ctx.lineTo(cx-50,76); ctx.moveTo(cx+26,14); ctx.lineTo(cx+50,76); ctx.stroke();
+  } else if (sh === 'cape') {
+    ctx.beginPath(); ctx.moveTo(cx-30,18); ctx.lineTo(cx+30,18); ctx.lineTo(cx+44,65); ctx.lineTo(cx+44,105); ctx.lineTo(cx-44,105); ctx.lineTo(cx-44,65); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx-30,18); ctx.lineTo(cx-74,88); ctx.moveTo(cx+30,18); ctx.lineTo(cx+74,88); ctx.stroke();
+  } else {
+    ctx.beginPath(); ctx.moveTo(cx-32,18); ctx.lineTo(cx+32,18); ctx.lineTo(cx+46,62); ctx.lineTo(cx+52,90); ctx.lineTo(cx+60,105); ctx.lineTo(cx-60,105); ctx.lineTo(cx-52,90); ctx.lineTo(cx-46,62); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx-32,18); ctx.lineTo(cx-52,74); ctx.moveTo(cx+32,18); ctx.lineTo(cx+52,74); ctx.stroke();
+  }
+  for (let i=0;i<5;i++) { ctx.beginPath(); ctx.arc(cx-24+i*12,98,2,0,Math.PI*2); ctx.fillStyle=ac; ctx.fill(); }
+  ctx.fillStyle='rgba(255,255,255,0.3)'; ctx.font='10px Plus Jakarta Sans,sans-serif'; ctx.textAlign='center';
+  ctx.fillText(design.neckline||'',cx,H-6);
+}
+
+function renderDesigns(designs) {
+  const grid = document.getElementById('designsGrid');
+  grid.innerHTML = '';
+  designs.forEach((d,i) => {
+    const card = document.createElement('div');
+    card.className = 'design-card';
+    card.innerHTML = `
+      <div class="design-illustration"><canvas class="design-canvas" width="200" height="150"></canvas></div>
+      <div class="design-info">
+        <div class="design-name">${d.name}</div>
+        <div class="design-desc">${d.description}</div>
+        <div class="design-tag-row">${(d.tags||[]).map(t=>`<span class="design-tag">${t}</span>`).join('')}</div>
+      </div>`;
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.design-card').forEach(c=>c.classList.remove('selected'));
+      card.classList.add('selected');
+      selectedDesignIdx = i;
+      showDetail(d);
+      document.getElementById('actionRow').style.display = 'flex';
+    });
+    grid.appendChild(card);
+    drawBlouse(card.querySelector('canvas'), d);
+  });
+}
+
+function showDetail(d) {
+  const panel = document.getElementById('detailPanel');
+  panel.style.display = 'block';
+  panel.innerHTML = `
+    <h4>${d.name}</h4>
+    <div class="detail-grid">
+      <div class="detail-item"><div class="detail-label">Neckline</div><div class="detail-val">${d.neckline}</div></div>
+      <div class="detail-item"><div class="detail-label">Sleeves</div><div class="detail-val">${d.sleeves}</div></div>
+      <div class="detail-item"><div class="detail-label">Back design</div><div class="detail-val">${d.back}</div></div>
+      <div class="detail-item"><div class="detail-label">Embellishment</div><div class="detail-val">${d.embellishment}</div></div>
+      <div class="detail-item" style="grid-column:1/-1"><div class="detail-label">Colour recommendation</div><div class="detail-val">${d.colorScheme}</div></div>
+    </div>
+    <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Tailoring steps</div>
+    <ol class="tailor-list">
+      ${(d.tailoringSteps||[]).map((s,i)=>`<li><span class="step-n">${i+1}</span><span>${s}</span></li>`).join('')}
+    </ol>`;
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ── ACTIONS ──
+function downloadPDF() {
+  if (selectedDesignIdx === null) { alert('Please select a design first'); return; }
+  const d = allDesigns[selectedDesignIdx];
+  const content = `BLOUSEAI — DESIGN SPECIFICATION
+================================
+Design: ${d.name}
+Neckline: ${d.neckline}
+Sleeves: ${d.sleeves}
+Back: ${d.back}
+Embellishment: ${d.embellishment}
+Colour: ${d.colorScheme}
+
+Saree Analysis:
+Fabric: ${sareeAnalysis?.fabric||''}
+Primary Colour: ${sareeAnalysis?.primaryColor||''}
+Pattern: ${sareeAnalysis?.pattern||''}
+Occasion: ${sareeAnalysis?.occasion||''}
+
+TAILORING STEPS:
+${(d.tailoringSteps||[]).map((s,i)=>`${i+1}. ${s}`).join('\n')}
+
+Generated by BlouseAI · blouseai.in`;
+  const blob = new Blob([content], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url;
+  a.download = d.name.replace(/\s+/g,'-') + '-BlouseAI.txt';
+  a.click(); URL.revokeObjectURL(url);
+}
+
+function shareWhatsApp() {
+  if (selectedDesignIdx === null) { alert('Please select a design first'); return; }
+  const d = allDesigns[selectedDesignIdx];
+  const msg = encodeURIComponent(`✂️ *Blouse Design from BlouseAI*\n\n*${d.name}*\n• Neckline: ${d.neckline}\n• Sleeves: ${d.sleeves}\n• Back: ${d.back}\n• Embellishment: ${d.embellishment}\n• Colour: ${d.colorScheme}\n\nGenerated by BlouseAI 🥻`);
+  window.open('https://wa.me/?text=' + msg, '_blank');
+}
+
+function copyLink() {
+  navigator.clipboard.writeText(window.location.href).then(() => alert('Link copied! Share it with your customers.'));
+}
+
+// ── MODAL ──
+let selectedPlan = { credits: 5, amount: 9900, name: 'Starter' };
+
+function openBuyModal(credits, plan) {
+  document.getElementById('buyModal').classList.add('open');
+}
+function closeBuyModal() {
+  document.getElementById('buyModal').classList.remove('open');
+}
+function selectPlan(el) {
+  document.querySelectorAll('.modal-plan').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  selectedPlan = { credits: +el.dataset.credits, amount: +el.dataset.amount, name: el.dataset.name };
+}
+document.getElementById('buyModal').addEventListener('click', e => { if (e.target === document.getElementById('buyModal')) closeBuyModal(); });
+
+function startPayment() {
+  const name = document.getElementById('buyName').value.trim();
+  const phone = document.getElementById('buyPhone').value.trim();
+  const email = document.getElementById('buyEmail').value.trim();
+  if (!name || !phone) { alert('Please enter your name and phone number'); return; }
+
+  // ── RAZORPAY CONFIG ──
+  // Replace key_id with your Razorpay test/live key
+  const options = {
+    key: 'rzp_test_REPLACE_WITH_YOUR_KEY',
+    amount: selectedPlan.amount,
+    currency: 'INR',
+    name: 'BlouseAI',
+    description: selectedPlan.name + ' — ' + selectedPlan.credits + ' design credits',
+    image: '',
+    prefill: { name, email, contact: phone },
+    notes: { credits: selectedPlan.credits, plan: selectedPlan.name },
+    theme: { color: '#B8860B' },
+    handler: function(response) {
+      credits += selectedPlan.credits;
+      localStorage.setItem('blouseai_credits', credits);
+      updateCreditsDisplay();
+      closeBuyModal();
+      alert('✅ Payment successful! ' + selectedPlan.credits + ' credits added. Payment ID: ' + response.razorpay_payment_id);
+    },
+    modal: { ondismiss: function() { console.log('Payment dismissed'); } }
+  };
+  const rzp = new Razorpay(options);
+  rzp.open();
+}
+
+function fallbackDesigns(info) {
+  return [
+    { name:'Classic Silk Blouse', neckline:'Round neck', sleeves:'Quarter sleeves', back:'Hook closure', embellishment:'Zari border trim', colorScheme:'Match saree border colour', tags:['Traditional','Elegant'], description:'Timeless styling that complements the saree fabric perfectly. Clean lines with minimal fuss.', svgShape:'classic', accentColor:'#8B1A1A', tailoringSteps:['Take bust, waist and length measurements','Cut front and back panels with 1cm seam allowance','Stitch shoulder seams first','Attach neckline facing and press','Hem sleeves and body, add hooks at back'] },
+    { name:'Princess Cut Modern', neckline:'Deep V-neck', sleeves:'Cap sleeves', back:'Keyhole back', embellishment:'Sequin trim at neckline', colorScheme:'Contrast or tone-on-tone', tags:['Modern','Festive'], description:'Flattering princess-cut silhouette with a V-neck. Keyhole back adds drama for evening events.', svgShape:'princess', accentColor:'#1D4E89', tailoringSteps:['Draft princess-cut panels with vertical seams','Interface V-neckline for structure','Stitch side seams and press darts','Finish keyhole back with loop closure','Attach cap sleeves and bind armhole'] },
+    { name:'Boat Neck Elegance', neckline:'Boat neck', sleeves:'Elbow sleeves', back:'Full back with zip', embellishment:'Thread embroidery on yoke', colorScheme:'Complementary shade from pallu', tags:['Elegant','Wedding'], description:'Sophisticated boat neck with elbow sleeves. Thread work on the yoke mirrors the saree embroidery.', svgShape:'cape', accentColor:'#5C4033', tailoringSteps:['Mark boat neck shape symmetrically on both panels','Interface front and back neckline','Join shoulders and stitch side seams','Sew elbow-length sleeves into armhole','Add hand embroidery on yoke, insert back zip'] },
+    { name:'Peplum Fusion', neckline:'Sweetheart neck', sleeves:'Sleeveless', back:'Open back with ties', embellishment:'Bead work on neckline', colorScheme:'Bold complementary contrast', tags:['Fusion','Trendy'], description:'Contemporary peplum silhouette adds modern drama. Sweetheart neckline and bead work create a bridal edge.', svgShape:'peplum', accentColor:'#0F6E56', tailoringSteps:['Draft sweetheart neckline with internal boning','Cut bodice and separate peplum flare piece','Attach boning inside neckline seam','Join bodice at waistline to peplum','Stitch back ties, add bead embellishment at neckline'] }
+  ];
+}
+</script>
+</body>
+</html>
