@@ -272,7 +272,7 @@ section { padding: 5rem 2rem; }
 }
 .design-card:hover { border-color: rgba(184,134,11,0.4); }
 .design-card.selected { border: 1.5px solid var(--gold); }
-.design-illustration { height: 150px; background: rgba(255,255,255,0.03); position: relative; overflow: hidden; }
+.design-illustration { height: 200px; background: rgba(255,255,255,0.03); position: relative; overflow: hidden; }
 .design-canvas { width: 100%; height: 100%; }
 .design-info { padding: 10px 12px; }
 .design-name { font-size: 13px; font-weight: 600; color: white; margin-bottom: 3px; }
@@ -864,28 +864,293 @@ function drawBlouse(canvas, design) {
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
   const ac = design.accentColor || '#B8860B';
-  ctx.clearRect(0, 0, W, H);
-  ctx.fillStyle = 'rgba(255,255,255,0.03)'; ctx.fillRect(0,0,W,H);
-  const cx = W/2;
-  ctx.strokeStyle = ac; ctx.fillStyle = ac + '33'; ctx.lineWidth = 1.5;
   const sh = design.svgShape || 'classic';
-  if (sh === 'classic') {
-    ctx.beginPath(); ctx.moveTo(cx-35,22); ctx.lineTo(cx+35,22); ctx.lineTo(cx+46,62); ctx.quadraticCurveTo(cx+50,82,cx+48,105); ctx.lineTo(cx-48,105); ctx.quadraticCurveTo(cx-50,82,cx-46,62); ctx.closePath(); ctx.fill(); ctx.stroke();
-    ctx.beginPath(); ctx.ellipse(cx,22,18,9,0,0,Math.PI*2); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(cx-35,22); ctx.lineTo(cx-56,72); ctx.moveTo(cx+35,22); ctx.lineTo(cx+56,72); ctx.stroke();
-  } else if (sh === 'princess') {
-    ctx.beginPath(); ctx.moveTo(cx-26,14); ctx.quadraticCurveTo(cx,4,cx+26,14); ctx.lineTo(cx+50,65); ctx.quadraticCurveTo(cx+52,86,cx+48,108); ctx.lineTo(cx-48,108); ctx.quadraticCurveTo(cx-52,86,cx-50,65); ctx.closePath(); ctx.fill(); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(cx-26,14); ctx.lineTo(cx-50,76); ctx.moveTo(cx+26,14); ctx.lineTo(cx+50,76); ctx.stroke();
-  } else if (sh === 'cape') {
-    ctx.beginPath(); ctx.moveTo(cx-30,18); ctx.lineTo(cx+30,18); ctx.lineTo(cx+44,65); ctx.lineTo(cx+44,105); ctx.lineTo(cx-44,105); ctx.lineTo(cx-44,65); ctx.closePath(); ctx.fill(); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(cx-30,18); ctx.lineTo(cx-74,88); ctx.moveTo(cx+30,18); ctx.lineTo(cx+74,88); ctx.stroke();
-  } else {
-    ctx.beginPath(); ctx.moveTo(cx-32,18); ctx.lineTo(cx+32,18); ctx.lineTo(cx+46,62); ctx.lineTo(cx+52,90); ctx.lineTo(cx+60,105); ctx.lineTo(cx-60,105); ctx.lineTo(cx-52,90); ctx.lineTo(cx-46,62); ctx.closePath(); ctx.fill(); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(cx-32,18); ctx.lineTo(cx-52,74); ctx.moveTo(cx+32,18); ctx.lineTo(cx+52,74); ctx.stroke();
+  const nl = (design.neckline || '').toLowerCase();
+  ctx.clearRect(0, 0, W, H);
+
+  // Parse accent colour for fabric shading
+  function hexToRgb(hex) {
+    const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+    return [r,g,b];
   }
-  for (let i=0;i<5;i++) { ctx.beginPath(); ctx.arc(cx-24+i*12,98,2,0,Math.PI*2); ctx.fillStyle=ac; ctx.fill(); }
-  ctx.fillStyle='rgba(255,255,255,0.3)'; ctx.font='10px Plus Jakarta Sans,sans-serif'; ctx.textAlign='center';
-  ctx.fillText(design.neckline||'',cx,H-6);
+  const [r,g,b] = hexToRgb(ac.length===7 ? ac : '#B8860B');
+
+  // ── BACKGROUND ──
+  const bg = ctx.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0, `rgba(${r},${g},${b},0.08)`);
+  bg.addColorStop(1, `rgba(${r},${g},${b},0.03)`);
+  ctx.fillStyle = bg; ctx.fillRect(0,0,W,H);
+
+  const cx = W/2, scale = W/200;
+
+  // ── HELPER: rounded rect path ──
+  function roundRect(x,y,w,h,rad) {
+    ctx.beginPath();
+    ctx.moveTo(x+rad,y);
+    ctx.lineTo(x+w-rad,y); ctx.quadraticCurveTo(x+w,y,x+w,y+rad);
+    ctx.lineTo(x+w,y+h-rad); ctx.quadraticCurveTo(x+w,y+h,x+w-rad,y+h);
+    ctx.lineTo(x+rad,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-rad);
+    ctx.lineTo(x,y+rad); ctx.quadraticCurveTo(x,y,x+rad,y);
+    ctx.closePath();
+  }
+
+  // ── FABRIC GRADIENT ──
+  function fabricGrad(x1,y1,x2,y2) {
+    const g = ctx.createLinearGradient(x1,y1,x2,y2);
+    g.addColorStop(0,   `rgba(${Math.min(r+40,255)},${Math.min(g+40,255)},${Math.min(b+40,255)},0.95)`);
+    g.addColorStop(0.4, `rgba(${r},${g},${b},0.9)`);
+    g.addColorStop(1,   `rgba(${Math.max(r-30,0)},${Math.max(g-30,0)},${Math.max(b-30,0)},0.95)`);
+    return g;
+  }
+
+  // ── DRAW BODY ──
+  function drawBody(bodyPath) {
+    ctx.save();
+    ctx.fillStyle = fabricGrad(cx-60*scale, 20*scale, cx+60*scale, 130*scale);
+    ctx.shadowColor = `rgba(${r},${g},${b},0.4)`;
+    ctx.shadowBlur = 12;
+    bodyPath();
+    ctx.fill();
+    ctx.restore();
+    // border
+    ctx.strokeStyle = `rgba(${r},${g},${b},0.9)`;
+    ctx.lineWidth = 1.5*scale;
+    bodyPath();
+    ctx.stroke();
+    // sheen overlay
+    const sheen = ctx.createLinearGradient(cx-50*scale,25*scale,cx+10*scale,90*scale);
+    sheen.addColorStop(0,'rgba(255,255,255,0.18)');
+    sheen.addColorStop(0.5,'rgba(255,255,255,0.04)');
+    sheen.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.fillStyle = sheen;
+    bodyPath();
+    ctx.fill();
+  }
+
+  // ── NECKLINE SHAPE ──
+  function drawNeck(topY) {
+    ctx.strokeStyle = `rgba(${r},${g},${b},0.95)`;
+    ctx.lineWidth = 2*scale;
+    ctx.beginPath();
+    if (nl.includes('v') || nl.includes('deep')) {
+      // V-neck
+      ctx.moveTo(cx-22*scale, topY);
+      ctx.lineTo(cx, topY+26*scale);
+      ctx.lineTo(cx+22*scale, topY);
+    } else if (nl.includes('boat')) {
+      // Boat neck — wide shallow curve
+      ctx.moveTo(cx-30*scale, topY+4*scale);
+      ctx.quadraticCurveTo(cx, topY-4*scale, cx+30*scale, topY+4*scale);
+    } else if (nl.includes('square')) {
+      // Square neck
+      ctx.moveTo(cx-20*scale, topY);
+      ctx.lineTo(cx-20*scale, topY+18*scale);
+      ctx.lineTo(cx+20*scale, topY+18*scale);
+      ctx.lineTo(cx+20*scale, topY);
+    } else if (nl.includes('sweet')) {
+      // Sweetheart
+      ctx.moveTo(cx-22*scale, topY);
+      ctx.bezierCurveTo(cx-22*scale,topY+16*scale, cx,topY+8*scale, cx,topY+22*scale);
+      ctx.bezierCurveTo(cx,topY+8*scale, cx+22*scale,topY+16*scale, cx+22*scale,topY);
+    } else if (nl.includes('high')) {
+      // High/mandarin
+      ctx.moveTo(cx-18*scale, topY-6*scale);
+      ctx.lineTo(cx-18*scale, topY+2*scale);
+      ctx.quadraticCurveTo(cx, topY+10*scale, cx+18*scale, topY+2*scale);
+      ctx.lineTo(cx+18*scale, topY-6*scale);
+    } else {
+      // Round neck (default)
+      ctx.arc(cx, topY+10*scale, 20*scale, Math.PI, 0);
+    }
+    ctx.stroke();
+    // Neckline embellishment dots
+    ctx.fillStyle = `rgba(255,215,0,0.85)`;
+    for(let i=0;i<7;i++){
+      const t = i/6;
+      let ex, ey;
+      if(nl.includes('v')||nl.includes('deep')){
+        if(t<0.5){ ex=cx-22*scale+(t*2)*22*scale; ey=topY+(t*2)*26*scale; }
+        else{ ex=cx+((t-0.5)*2)*22*scale; ey=topY+26*scale-((t-0.5)*2)*26*scale; }
+      } else {
+        ex = cx + Math.cos(Math.PI + t*Math.PI)*20*scale;
+        ey = topY+10*scale + Math.sin(Math.PI + t*Math.PI)*20*scale;
+      }
+      ctx.beginPath(); ctx.arc(ex,ey,2*scale,0,Math.PI*2); ctx.fill();
+    }
+  }
+
+  // ── SLEEVES ──
+  const sl = (design.sleeves || '').toLowerCase();
+  function drawSleeve(side) {
+    const sx = side === 'left' ? cx-58*scale : cx+58*scale;
+    const dir = side === 'left' ? -1 : 1;
+    ctx.save();
+    ctx.fillStyle = fabricGrad(sx,30*scale,sx+dir*20*scale,100*scale);
+    ctx.beginPath();
+    if(sl.includes('sleeveless')||sl.includes('without')) {
+      // no sleeve
+    } else if(sl.includes('cap')) {
+      // cap sleeve — small puff
+      ctx.ellipse(sx+dir*8*scale, 38*scale, 14*scale, 10*scale, dir*0.3, 0, Math.PI*2);
+      ctx.fill();
+      ctx.strokeStyle=`rgba(${r},${g},${b},0.8)`; ctx.lineWidth=1.2*scale; ctx.stroke();
+    } else if(sl.includes('quarter')||sl.includes('short')) {
+      // quarter sleeve
+      ctx.moveTo(sx,28*scale); ctx.lineTo(sx+dir*28*scale,28*scale);
+      ctx.lineTo(sx+dir*30*scale,68*scale); ctx.lineTo(sx+dir*4*scale,68*scale);
+      ctx.closePath(); ctx.fill();
+      ctx.strokeStyle=`rgba(${r},${g},${b},0.8)`; ctx.lineWidth=1.2*scale; ctx.stroke();
+    } else if(sl.includes('elbow')) {
+      // elbow sleeve
+      ctx.moveTo(sx,28*scale); ctx.lineTo(sx+dir*30*scale,28*scale);
+      ctx.lineTo(sx+dir*32*scale,88*scale); ctx.lineTo(sx+dir*4*scale,88*scale);
+      ctx.closePath(); ctx.fill();
+      ctx.strokeStyle=`rgba(${r},${g},${b},0.8)`; ctx.lineWidth=1.2*scale; ctx.stroke();
+    } else {
+      // full / long sleeve
+      ctx.moveTo(sx,28*scale); ctx.lineTo(sx+dir*30*scale,28*scale);
+      ctx.quadraticCurveTo(sx+dir*36*scale,90*scale, sx+dir*28*scale,128*scale);
+      ctx.lineTo(sx+dir*6*scale,128*scale);
+      ctx.quadraticCurveTo(sx+dir*2*scale,90*scale, sx,28*scale);
+      ctx.closePath(); ctx.fill();
+      ctx.strokeStyle=`rgba(${r},${g},${b},0.8)`; ctx.lineWidth=1.2*scale; ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // ── EMBELLISHMENT PATTERN ──
+  function drawEmbellishment(bodyPath) {
+    const emb = (design.embellishment||'').toLowerCase();
+    ctx.save();
+    ctx.globalAlpha = 0.5;
+    if(emb.includes('zari')||emb.includes('gold')) {
+      // Zari border — gold lines at hem
+      ctx.strokeStyle='rgba(255,200,0,0.8)'; ctx.lineWidth=3*scale;
+      ctx.beginPath(); ctx.moveTo(cx-55*scale,118*scale); ctx.lineTo(cx+55*scale,118*scale); ctx.stroke();
+      ctx.lineWidth=1*scale;
+      ctx.beginPath(); ctx.moveTo(cx-55*scale,112*scale); ctx.lineTo(cx+55*scale,112*scale); ctx.stroke();
+    } else if(emb.includes('sequin')||emb.includes('bead')) {
+      // Scattered sequins
+      ctx.fillStyle='rgba(255,220,100,0.9)';
+      const pts=[[cx-20*scale,50*scale],[cx+15*scale,45*scale],[cx-10*scale,70*scale],[cx+25*scale,65*scale],[cx,55*scale],[cx-30*scale,80*scale],[cx+30*scale,78*scale]];
+      pts.forEach(([x,y])=>{ ctx.beginPath(); ctx.arc(x,y,2.5*scale,0,Math.PI*2); ctx.fill(); });
+    } else if(emb.includes('embroid')||emb.includes('thread')) {
+      // Embroidery flowers on yoke
+      ctx.fillStyle='rgba(255,150,100,0.7)';
+      [[cx-25*scale,48*scale],[cx+25*scale,48*scale],[cx,52*scale]].forEach(([x,y])=>{
+        for(let a=0;a<6;a++){
+          ctx.beginPath();
+          ctx.ellipse(x+Math.cos(a*60*Math.PI/180)*6*scale, y+Math.sin(a*60*Math.PI/180)*6*scale, 3*scale,2*scale,a*60*Math.PI/180,0,Math.PI*2);
+          ctx.fill();
+        }
+      });
+    }
+    ctx.restore();
+  }
+
+  // ── SHAPE VARIANTS ──
+  const topY = 28*scale;
+
+  if(sh === 'princess') {
+    const bodyPath = () => {
+      ctx.beginPath();
+      ctx.moveTo(cx-24*scale, topY);
+      ctx.quadraticCurveTo(cx, topY-8*scale, cx+24*scale, topY);
+      ctx.lineTo(cx+52*scale, 70*scale);
+      ctx.quadraticCurveTo(cx+54*scale,95*scale, cx+50*scale,128*scale);
+      ctx.lineTo(cx-50*scale,128*scale);
+      ctx.quadraticCurveTo(cx-54*scale,95*scale, cx-52*scale,70*scale);
+      ctx.closePath();
+    };
+    drawSleeve('left'); drawSleeve('right');
+    drawBody(bodyPath);
+    drawNeck(topY-6*scale);
+    drawEmbellishment(bodyPath);
+
+  } else if(sh === 'cape') {
+    const bodyPath = () => {
+      ctx.beginPath();
+      ctx.moveTo(cx-28*scale, topY);
+      ctx.lineTo(cx+28*scale, topY);
+      ctx.lineTo(cx+46*scale, 72*scale);
+      ctx.lineTo(cx+46*scale,128*scale);
+      ctx.lineTo(cx-46*scale,128*scale);
+      ctx.lineTo(cx-46*scale,72*scale);
+      ctx.closePath();
+    };
+    // Cape flare
+    ctx.save();
+    ctx.fillStyle=`rgba(${r},${g},${b},0.25)`;
+    ctx.beginPath();
+    ctx.moveTo(cx-28*scale,topY); ctx.lineTo(cx-80*scale,100*scale);
+    ctx.lineTo(cx-50*scale,112*scale); ctx.lineTo(cx-46*scale,72*scale); ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(cx+28*scale,topY); ctx.lineTo(cx+80*scale,100*scale);
+    ctx.lineTo(cx+50*scale,112*scale); ctx.lineTo(cx+46*scale,72*scale); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle=`rgba(${r},${g},${b},0.6)`; ctx.lineWidth=1*scale;
+    ctx.beginPath(); ctx.moveTo(cx-28*scale,topY); ctx.lineTo(cx-80*scale,100*scale); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx+28*scale,topY); ctx.lineTo(cx+80*scale,100*scale); ctx.stroke();
+    ctx.restore();
+    drawBody(bodyPath);
+    drawNeck(topY);
+    drawEmbellishment(bodyPath);
+
+  } else if(sh === 'peplum') {
+    const bodyPath = () => {
+      ctx.beginPath();
+      ctx.moveTo(cx-30*scale, topY);
+      ctx.lineTo(cx+30*scale, topY);
+      ctx.lineTo(cx+48*scale, 88*scale);
+      ctx.lineTo(cx-48*scale, 88*scale);
+      ctx.closePath();
+    };
+    const peplumPath = () => {
+      ctx.beginPath();
+      ctx.moveTo(cx-52*scale,86*scale);
+      ctx.quadraticCurveTo(cx-60*scale,108*scale, cx-40*scale,118*scale);
+      ctx.quadraticCurveTo(cx,124*scale, cx+40*scale,118*scale);
+      ctx.quadraticCurveTo(cx+60*scale,108*scale, cx+52*scale,86*scale);
+      ctx.closePath();
+    };
+    drawSleeve('left'); drawSleeve('right');
+    // Peplum layer
+    ctx.fillStyle=`rgba(${r},${g},${b},0.6)`;
+    peplumPath(); ctx.fill();
+    ctx.strokeStyle=`rgba(${r},${g},${b},0.8)`; ctx.lineWidth=1*scale;
+    peplumPath(); ctx.stroke();
+    drawBody(bodyPath);
+    drawNeck(topY);
+    drawEmbellishment(bodyPath);
+
+  } else {
+    // Classic — most detailed
+    const bodyPath = () => {
+      ctx.beginPath();
+      ctx.moveTo(cx-30*scale, topY);
+      ctx.lineTo(cx+30*scale, topY);
+      ctx.lineTo(cx+50*scale, 65*scale);
+      ctx.quadraticCurveTo(cx+54*scale, 95*scale, cx+50*scale, 128*scale);
+      ctx.lineTo(cx-50*scale, 128*scale);
+      ctx.quadraticCurveTo(cx-54*scale, 95*scale, cx-50*scale, 65*scale);
+      ctx.closePath();
+    };
+    drawSleeve('left'); drawSleeve('right');
+    drawBody(bodyPath);
+    drawNeck(topY);
+    drawEmbellishment(bodyPath);
+
+    // Hook closures on front
+    ctx.fillStyle='rgba(255,215,0,0.7)';
+    for(let i=0;i<4;i++){
+      ctx.beginPath(); ctx.arc(cx, 78*scale+i*12*scale, 2.5*scale, 0, Math.PI*2); ctx.fill();
+    }
+  }
+
+  // ── LABEL ──
+  ctx.fillStyle='rgba(255,255,255,0.55)';
+  ctx.font=`bold ${10*scale}px Plus Jakarta Sans,sans-serif`;
+  ctx.textAlign='center';
+  ctx.fillText(design.neckline||'', cx, H-6);
 }
 
 function renderDesigns(designs) {
@@ -895,7 +1160,7 @@ function renderDesigns(designs) {
     const card = document.createElement('div');
     card.className = 'design-card';
     card.innerHTML = `
-      <div class="design-illustration"><canvas class="design-canvas" width="200" height="150"></canvas></div>
+      <div class="design-illustration"><canvas class="design-canvas" width="300" height="200"></canvas></div>
       <div class="design-info">
         <div class="design-name">${d.name}</div>
         <div class="design-desc">${d.description}</div>
