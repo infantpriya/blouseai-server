@@ -1,7 +1,3 @@
-const Anthropic = require('@anthropic-ai/sdk');
-
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -13,12 +9,19 @@ module.exports = async function handler(req, res) {
     const { analysis, style, neckline } = req.body;
     if (!analysis) return res.status(400).json({ error: 'No analysis provided' });
 
-    const response = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1400,
-      messages: [{
-        role: 'user',
-        content: `Based on this saree analysis, generate 4 unique blouse design concepts.
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + process.env.GROQ_API_KEY
+      },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        max_tokens: 1400,
+        temperature: 0.7,
+        messages: [{
+          role: 'user',
+          content: `Based on this saree analysis, generate 4 unique blouse design concepts.
 Saree: ${JSON.stringify(analysis)}
 Style preference: ${style || 'Traditional'}
 Neckline preference: ${neckline || 'Any'}
@@ -37,16 +40,23 @@ Return ONLY a JSON array (no markdown, no extra text):
   "accentColor": "#hexcolor that matches saree",
   "tailoringSteps": ["step1","step2","step3","step4","step5"]
 }]`
-      }]
+        }]
+      })
     });
 
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error?.message || 'Groq error ' + response.status);
+    }
+
+    const data = await response.json();
     let designs;
-    try { designs = JSON.parse(response.content[0].text.replace(/```json|```/g, '').trim()); }
+    try { designs = JSON.parse(data.choices[0].message.content.replace(/```json|```/g, '').trim()); }
     catch { designs = null; }
 
     res.status(200).json({ success: true, designs });
   } catch (err) {
-    console.error(err);
+    console.error('Generate error:', err.message);
     res.status(500).json({ error: err.message });
   }
 };
