@@ -765,8 +765,8 @@ function setupChips(rowId, setter) {
 setupChips('styleRow', v => selectedStyle = v);
 setupChips('neckRow', v => selectedNeck = v);
 
-// ── BACKEND SERVER URL — paste your Vercel URL here after deploying ──
-const SERVER_URL = 'https://blouseai.vercel.app/';
+// Uses same Vercel domain — no separate server URL needed
+const SERVER_URL = 'https://blouseai.vercel.app';
 
 function updateBtn() {
   generateBtn.disabled = !uploadedFile;
@@ -801,7 +801,7 @@ generateBtn.addEventListener('click', async () => {
   try {
     setLS(1);
     // Step 1+2: Send image to our backend → Claude vision analyses it
-    const analysisRes = await fetch(SERVER_URL + '/analyse', {
+    const analysisRes = await fetch(SERVER_URL + '/api/analyse', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ imageBase64, mediaType })
@@ -815,7 +815,7 @@ generateBtn.addEventListener('click', async () => {
     setLS(3);
 
     // Step 3+4: Send analysis to backend → Claude generates designs
-    const designRes = await fetch(SERVER_URL + '/generate', {
+    const designRes = await fetch(SERVER_URL + '/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ analysis: info, style: selectedStyle, neckline: selectedNeck })
